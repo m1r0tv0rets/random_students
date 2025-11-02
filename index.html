@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рандомайзер учеников</title>
+    <style>
+        /* Сброс стандартных отступов и использование border-box для всех элементов */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Стили для тела страницы: градиентный фон, центрирование содержимого */
+        body {
+            background: linear-gradient(135deg, #0a0f2b, #1a237e);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Основной контейнер приложения */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(13, 19, 33, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(66, 133, 244, 0.3);
+        }
+
+        /* Стили для шапки приложения */
+        .header {
+            background: rgba(25, 35, 70, 0.9);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(66, 133, 244, 0.3);
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #bbdefb;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Кнопка для открытия истории выборов */
+        .history-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(66, 133, 244, 0.2);
+            border: 1px solid rgba(66, 133, 244, 0.5);
+            color: #bbdefb;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .history-btn:hover {
+            background: rgba(66, 133, 244, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Основная область содержимого */
+        .main-content {
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        /* Область отображения случайного выбора */
+        .random-display {
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0 30px;
+            background: rgba(25, 35, 70, 0.5);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .student-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #bbdefb;
+            margin-bottom: 10px;
+        }
+
+        .student-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+
+        .to-board {
+            font-size: 18px;
+            color: #ffcc80;
+            font-style: italic;
+        }
+
+        /* Кнопка выбора случайного ученика */
+        .random-btn {
+            background: linear-gradient(135deg, #2962ff, #0039cb);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4);
+        }
+
+        .random-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(41, 98, 255, 0.6);
+        }
+
+        .random-btn:active {
+            transform: translateY(1px);
+        }
+
+        .random-btn:disabled {
+            background: #546e7a;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Модальное окно истории выборов */
+        .history-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .history-content {
+            background: #0a0f2b;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 15px;
+            padding: 25px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(66, 133, 244, 0.3);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(66, 133, 244, 0.3);
+        }
+
+        .history-header h2 {
+            color: #bbdefb;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #bbdefb;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #ff5252;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: rgba(25, 35, 70, 0.5);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .history-number {
+            font-weight: bold;
+            color: #bbdefb;
+        }
+
+        .history-name {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        /* Стили для конфетти */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        /* Анимация падения конфетти */
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(1000px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Анимация прокрутки чисел */
+        @keyframes number-scroll {
+            0% { transform: translateY(50px); opacity: 0; }
+            10% { transform: translateY(0); opacity: 1; }
+            90% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        .scrolling-number {
+            position: absolute;
+            font-size: 48px;
+            font-weight: bold;
+            color: #bbdefb;
+            animation: number-scroll 0.1s linear;
+        }
+    </style>
+</head>
+<body>
+    <!-- Основной контейнер приложения -->
+    <div class="container">
+        <div class="header">
+            <h1>Рандомайзер учеников</h1>
+            <p>Нажмите кнопку для случайного выбора ученика</p>
+            <button class="history-btn" id="historyBtn">История</button>
+        </div>
+        
+        <div class="main-content">
+            <!-- Область отображения результата -->
+            <div class="random-display" id="randomDisplay">
+                <div class="student-number" id="studentNumber">-</div>
+                <div class="student-name" id="studentName">Нажмите кнопку</div>
+                <div class="to-board" id="toBoard"></div>
+            </div>
+            
+            <!-- Кнопка запуска рандомайзера -->
+            <button class="random-btn" id="randomBtn">Выбрать ученика</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно истории выборов -->
+    <div class="history-modal" id="historyModal">
+        <div class="history-content">
+            <div class="history-header">
+                <h2>История выборов</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <ul class="history-list" id="historyList">
+                <!-- Список истории будет заполняться JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Запуск кода после полной загрузки DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            // Массив учеников (замените эти имена на настоящие)
+            const students = [
+                "Ученик 1", "Ученик 2", "Ученик 3", "Ученик 4", "Ученик 5", 
+                "Ученик 6", "Ученик 7", "Ученик 8", "Ученик 9", "Ученик 10", 
+                "Ученик 11", "Ученик 12", "Ученик 13", "Ученик 14", "Ученик 15", 
+                "Ученик 16", "Ученик 17", "Ученик 18", "Ученик 19", "Ученик 20", 
+                "Ученик 21", "Ученик 22", "Ученик 23", "Ученик 24", "Ученик 25", 
+                "Ученик 26", "Ученик 27", "Ученик 28", "Ученик 29", "Ученик 30"
+            ];
+
+            // Получение ссылок на DOM-элементы
+            const randomBtn = document.getElementById('randomBtn');
+            const historyBtn = document.getElementById('historyBtn');
+            const closeModal = document.getElementById('closeModal');
+            const historyModal = document.getElementById('historyModal');
+            const historyList = document.getElementById('historyList');
+            const randomDisplay = document.getElementById('randomDisplay');
+            const studentNumber = document.getElementById('studentNumber');
+            const studentName = document.getElementById('studentName');
+            const toBoard = document.getElementById('toBoard');
+
+            // Переменные для хранения состояния
+            let history = []; // История выборов
+            let isAnimating = false; // Флаг анимации (чтобы предотвратить множественные нажатия)
+            let availableStudents = [...students]; // Доступные для выбора ученики
+            let usedStudents = []; // Уже выбранные ученики
+
+            // Функция для получения случайного ученика
+            function getRandomStudent() {
+                // Если все ученики уже были выбраны, сбрасываем списки
+                if (availableStudents.length === 0) {
+                    availableStudents = [...usedStudents];
+                    usedStudents = [];
+                }
+                
+                // Выбор случайного индекса из доступных учеников
+                const randomIndex = Math.floor(Math.random() * availableStudents.length);
+                const student = availableStudents[randomIndex];
+                
+                // Перемещение выбранного ученика из доступных в использованные
+                availableStudents.splice(randomIndex, 1);
+                usedStudents.push(student);
+                
+                // Возврат объекта с информацией о выбранном ученике
+                return {
+                    name: student,
+                    number: students.indexOf(student) + 1
+                };
+            }
+
+            // Функция анимации прокрутки чисел
+            function animateNumberScroll() {
+                return new Promise(resolve => {
+                    const duration = 1500; // Общая продолжительность анимации
+                    const interval = 100; // Интервал между сменой чисел
+                    let elapsed = 0; // Прошедшее время
+                    
+                    // Запуск интервала для смены чисел
+                    const scrollInterval = setInterval(() => {
+                        elapsed += interval;
+                        const progress = Math.min(elapsed / duration, 1);
+                        
+                        // Создание и добавление прокручивающегося числа
+                        const randomIndex = Math.floor(Math.random() * students.length);
+                        const scrollNumber = document.createElement('div');
+                        scrollNumber.className = 'scrolling-number';
+                        scrollNumber.textContent = randomIndex + 1;
+                        randomDisplay.appendChild(scrollNumber);
+                        
+                        // Удаление числа после завершения анимации
+                        setTimeout(() => {
+                            if (randomDisplay.contains(scrollNumber)) {
+                                randomDisplay.removeChild(scrollNumber);
+                            }
+                        }, 100);
+                        
+                        // Завершение анимации по истечении времени
+                        if (progress >= 1) {
+                            clearInterval(scrollInterval);
+                            resolve();
+                        }
+                    }, interval);
+                });
+            }
+
+            // Функция создания конфетти
+            function createConfetti() {
+                const colors = ['#ff5252', '#ffeb3b', '#4caf50', '#2196f3', '#9c27b0', '#ff9800'];
+                const confettiCount = 100; // Количество конфетти
+                
+                // Создание множества конфетти
+                for (let i = 0; i < confettiCount; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animation = `confetti-fall ${Math.random() * 3 + 2}s linear forwards`;
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    
+                    randomDisplay.appendChild(confetti);
+                    
+                    // Удаление конфетти после завершения анимации
+                    setTimeout(() => {
+                        if (randomDisplay.contains(confetti)) {
+                            randomDisplay.removeChild(confetti);
+                        }
+                    }, 5000);
+                }
+            }
+
+            // Обработчик клика по кнопке выбора ученика
+            randomBtn.addEventListener('click', async function() {
+                // Защита от множественных нажатий во время анимации
+                if (isAnimating) return;
+                
+                isAnimating = true;
+                randomBtn.disabled = true;
+                
+                // Очистка области отображения
+                studentNumber.textContent = '';
+                studentName.textContent = '';
+                toBoard.textContent = '';
+                
+                // Получение случайного ученика
+                const selectedStudent = getRandomStudent();
+                
+                // Запуск анимации прокрутки чисел
+                await animateNumberScroll();
+                
+                // Отображение результата
+                studentNumber.textContent = selectedStudent.number;
+                studentName.textContent = selectedStudent.name;
+                toBoard.textContent = 'Прошу к доске';
+                
+                // Добавление выбора в историю
+                history.unshift({
+                    number: selectedStudent.number,
+                    name: selectedStudent.name,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+                
+                // Ограничение истории последними 10 выборами
+                if (history.length > 10) {
+                    history = history.slice(0, 10);
+                }
+                
+                // Создание конфетти для праздничного эффекта
+                createConfetti();
+                
+                // Обновление отображения истории
+                updateHistoryDisplay();
+                
+                // Сброс флагов анимации
+                isAnimating = false;
+                randomBtn.disabled = false;
+            });
+
+            // Функция обновления отображения истории
+            function updateHistoryDisplay() {
+                historyList.innerHTML = '';
+                
+                // Создание элементов списка для каждого элемента истории
+                history.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.innerHTML = `
+                        <span class="history-number">${item.number}</span>
+                        <span class="history-name">${item.name}</span>
+                        <span class="history-time">${item.timestamp}</span>
+                    `;
+                    historyList.appendChild(li);
+                });
+            }
+
+            // Обработчики для открытия/закрытия модального окна истории
+            historyBtn.addEventListener('click', function() {
+                historyModal.style.display = 'flex';
+            });
+
+            closeModal.addEventListener('click', function() {
+                historyModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target === historyModal) {
+                    historyModal.style.display = 'none';
+                }
+            });
+
+            // Инициализация отображения истории при загрузке
+            updateHistoryDisplay();
+        });
+    </script>
+</body>
+</html>
